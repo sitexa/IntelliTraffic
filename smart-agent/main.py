@@ -4,11 +4,11 @@ import warnings
 
 import numpy as np
 import torch
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, A2C, PPO, SAC
 
 # 从配置文件导入参数
 from config import (
-    MODEL_PATH, INITIAL_PHASE, MIN_GREEN_TIME, YELLOW_DURATION,
+    ALGO_NAME, MODEL_PATH, INITIAL_PHASE, MIN_GREEN_TIME, YELLOW_DURATION,
     CONTROLLER_HOST, CONTROLLER_PORT, AGENT_HOST, AGENT_PORT,
     PHASE_TO_LIGHTS, PHASE_TRANSITIONS, PHASE_SEQUENCE
 )
@@ -16,11 +16,48 @@ from config import (
 # 忽略stable-baselines3的警告
 warnings.filterwarnings('ignore', category=UserWarning, module='stable_baselines3')
 
-# 加载强化学习模型，使用custom_objects处理反序列化问题
-model = DQN.load(MODEL_PATH, custom_objects={
-    'lr_schedule': lambda x: 0.0001,
-    'exploration_schedule': lambda x: 0.1
-})
+# 算法映射字典
+ALGO_MAP = {
+    'DQN': DQN,
+    'A2C': A2C,
+    'PPO': PPO,
+    'SAC': SAC
+}
+
+def load_model_with_algo_check():
+    """根据配置加载模型并验证算法匹配性"""
+    print(f"🤖 配置算法: {ALGO_NAME}")
+    print(f"📁 模型路径: {MODEL_PATH}")
+    
+    # 检查算法是否支持
+    if ALGO_NAME not in ALGO_MAP:
+        raise ValueError(f"不支持的算法: {ALGO_NAME}，支持的算法: {list(ALGO_MAP.keys())}")
+    
+    # 获取对应的算法类
+    algo_class = ALGO_MAP[ALGO_NAME]
+    
+    try:
+        # 加载模型
+        model = algo_class.load(MODEL_PATH, custom_objects={
+            'lr_schedule': lambda x: 0.0001,
+            'exploration_schedule': lambda x: 0.1
+        })
+        
+        # 验证模型类型与配置算法是否匹配
+        if type(model).__name__ != ALGO_NAME:
+            raise ValueError(f"模型算法类型 {type(model).__name__} 与配置算法 {ALGO_NAME} 不匹配")
+        
+        print(f"✅ 模型加载成功，算法匹配验证通过")
+        print(f"📊 模型信息: {type(model).__name__}")
+        
+        return model
+        
+    except Exception as e:
+        print(f"❌ 模型加载失败: {e}")
+        raise
+
+# 加载强化学习模型
+model = load_model_with_algo_check()
 
 # 信号机状态参数
 current_phase = INITIAL_PHASE  # 当前相位

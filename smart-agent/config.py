@@ -1,4 +1,5 @@
 # 强化学习模型配置
+ALGO_NAME="DQN"
 MODEL_PATH = "./zszx-2-model-DQN.zip"
 
 # 信号机状态参数
