@@ -1,0 +1,19 @@
+[package]
+name = "traffic-detector"
+version = "0.1.0"
+edition = "2021"
+default-run = "traffic-detector"
+
+# 默认二进制目标配置
+[[bin]]
+name = "traffic-detector"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+serde_json = "1.0.139"
+serde = { version = "1.0.218", features = ["derive"] }
+chrono = "0.4.40"
+config = "0.13"
+
+[build-dependencies]
