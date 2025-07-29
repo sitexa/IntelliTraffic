@@ -1,18 +1,52 @@
 use lazy_static::lazy_static;
+use std::path::Path;
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
+use config::{Config, File as ConfigFile, FileFormat};
+use serde::Deserialize;
 
 lazy_static! {
     static ref LAST_EXECUTION: Mutex<SystemTime> = Mutex::new(SystemTime::now());
 }
 
-const ADDR: &str = "0.0.0.0:50051";
+#[derive(Debug, Deserialize)]
+struct AppConfig {
+    controller_host: String,
+    controller_port: u16,
+}
+
+fn load_config() -> Result<AppConfig, config::ConfigError> {
+    let config_path = "config.toml";
+
+    // 检查配置文件是否存在，如果不存在则创建默认配置
+    if !Path::new(config_path).exists() {
+        println!("⚠️ 配置文件不存在，使用默认配置");
+        let default_config = AppConfig {
+            controller_host: "0.0.0.0".to_string(),
+            controller_port: 50051,
+        };
+        return Ok(default_config);
+    }
+
+    let config = Config::builder()
+        .add_source(ConfigFile::new(config_path, FileFormat::Toml))
+        .build()?;
+
+    config.try_deserialize::<AppConfig>()
+}
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let listener = TcpListener::bind(ADDR).await?;
-    println!("🚦 信号机服务启动，监听 50051...");
+    // 加载配置
+    let config = load_config()?;
+
+    // 组合地址
+    let addr = format!("{}:{}", config.controller_host, config.controller_port);
+    println!("🔧 使用配置: {}", addr);
+
+    let listener = TcpListener::bind(&addr).await?;
+    println!("🚦 信号机服务启动，监听 {}...", config.controller_port);
 
     loop {
         let (mut socket, _) = listener.accept().await?;

@@ -3,8 +3,18 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 fn generate_state_vector(t: f32) -> Vec<f32> {
-    let phase_one_hot = vec![1.0, 0.0, 0.0, 0.0]; // 假设相位不变
-    let min_green = vec![1.0]; // 假设最小绿灯时间已满足
+    // 根据时间计算当前相位，每30秒切换一次相位
+    // t每0.1递增，程序每3秒输出一次，所以t*30对应实际秒数
+    let current_time_seconds = (t * 30.0) as u32;
+    let phase_index = (current_time_seconds / 30) % 4; // 每30秒切换相位，4个相位循环
+    
+    let mut phase_one_hot = vec![0.0, 0.0, 0.0, 0.0];
+    phase_one_hot[phase_index as usize] = 1.0; // 设置当前相位为1.0
+    
+    // 计算当前相位已持续的时间（秒）
+    let time_in_current_phase = current_time_seconds % 30;
+    // 如果当前相位已持续超过10秒，则最小绿灯时间已满足
+    let min_green = if time_in_current_phase >= 10 { vec![1.0] } else { vec![0.0] };
 
     let lane_count = 19;
     let density: Vec<f32> = (0..lane_count)

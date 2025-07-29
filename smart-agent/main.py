@@ -82,15 +82,23 @@ async def handle_detector(reader, writer):
                 
             # 解析交通状态数据
             traffic_state = json.loads(data.decode())
-
-            # 构造强化学习状态输入
-            phase_one_hot = [1 if i == current_phase else 0 for i in range(4)]
-            min_green = [0 if current_phase_duration <= MIN_GREEN_TIME else 1]
-            state = np.concatenate([
-                phase_one_hot,  # 当前相位(one-hot编码)
-                min_green,  # 是否满足最小绿
-                traffic_state
-            ])
+            
+            # 智能判断状态数据格式并构造强化学习状态输入
+            if len(traffic_state) == 43:  # 完整状态向量（4相位+1最小绿+38交通数据）
+                # 直接使用完整的状态向量
+                state = np.array(traffic_state, dtype=np.float32)
+            elif len(traffic_state) == 38:  # 仅包含交通数据（19密度+19排队长度）
+                # 需要添加相位和最小绿灯信息
+                phase_one_hot = [1 if i == current_phase else 0 for i in range(4)]
+                min_green = [0 if current_phase_duration <= MIN_GREEN_TIME else 1]
+                state = np.concatenate([
+                    phase_one_hot,  # 当前相位(one-hot编码)
+                    min_green,  # 是否满足最小绿
+                    traffic_state  # 交通状态数据
+                ])
+            else:
+                print(f"⚠️ 未知的状态向量长度: {len(traffic_state)}，跳过处理")
+                continue
 
             # 模型推理
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
