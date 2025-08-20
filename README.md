@@ -147,6 +147,12 @@ python main.py
 2. 添加必要的测试用例
 3. 更新相关文档
 
+
+## 项目愿景
+
+通过AI技术革新传统交通信号控制，构建更智能、更高效的城市交通管理系统，为智慧城市建设贡献力量。
+
+
 ## 许可证
 
 本项目采用 [MIT 许可证](LICENSE)。
@@ -174,10 +180,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-## 项目愿景
-
-通过AI技术革新传统交通信号控制，构建更智能、更高效的城市交通管理系统，为智慧城市建设贡献力量。
 
 ---
 
